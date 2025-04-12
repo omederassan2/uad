@@ -1,211 +1,267 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام سندات القبض</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            padding: 20px;
-            background-color: #f0f4f8;
-            color: #333;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>نظام سندات القبض</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f0f4f8;
+      padding: 10px;
+      color: #333;
+      margin: 0;
+    }
 
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: auto;
+    }
 
-        h2 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 25px;
-        }
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      font-size: 20px;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .form-group {
+      margin-bottom: 15px;
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
 
-        select, input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #bdc3c7;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-top: 8px;
-            box-sizing: border-box;
-        }
+    select, input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
 
-        button {
-            background-color: #27ae60;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            transition: background 0.3s;
-            margin-top: 10px;
-        }
+    button {
+      background: #27ae60;
+      color: #fff;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-        button:hover {
-            background-color: #219a52;
-        }
+    button:hover {
+      background: #219a52;
+    }
 
-        #message {
-            text-align: center;
-            margin-top: 15px;
-            font-weight: bold;
-            min-height: 24px;
-        }
+    #message {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+      min-height: 24px;
+      font-size: 14px;
+    }
 
-        .loading {
-            color: #7f8c8d;
-            font-style: italic;
-        }
+    .success { color: #27ae60; }
+    .error { color: #e74c3c; }
+    .loading { color: #7f8c8d; }
 
-        .error {
-            color: #e74c3c;
-        }
+    #todayReceipts {
+      margin-top: 25px;
+      background: #ecf0f1;
+      padding: 15px;
+      border-radius: 10px;
+    }
 
-        .success {
-            color: #27ae60;
-        }
+    #todayReceipts h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
 
-        .info {
-            color: #3498db;
-        }
-    </style>
+    #receiptList {
+      padding-right: 20px;
+      font-size: 14px;
+    }
+
+    .amount-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .amount-box {
+      background-color: #f5f5f5;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #2c3e50;
+      font-size: 15px;
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    #amountSelect {
+      width: 150px;
+      padding: 8px;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>سند قبض - وعد: <span id="todayDay"></span></h2>
-      
-        <div class="form-group">
-            <label for="note">ملاحظة :</label>
-            <input type="text" id="note" placeholder="ملاحظة">
-        </div>
+  <div class="container">
+    <h2>سند قبض - وعد: <span id="todayDay"></span></h2>
 
-        <div class="form-group">
-            <label for="clientSelect">اسم العميل:</label>
-            <select id="clientSelect">
-                <option value="">جارٍ تحميل العملاء...</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <label for="usd">قبض دولار ($):</label>
-            <input type="number" id="usd" placeholder="المبلغ بالدولار">
-        </div>
-        
-        <div class="form-group">
-            <label for="iqd">قبض دينار (IQD):</label>
-            <input type="number" id="iqd" placeholder="المبلغ بالدينار">
-        </div>
-        
-        <div class="form-group">
-            <label for="exchangeRate">سعر الصرف:</label>
-            <input type="number" id="exchangeRate" placeholder="سعر الدولار مقابل الدينار">
-        </div>
-        
-        <button onclick="validateAndSubmit()">تسجيل السند</button>
-        <div id="message"></div>
+    <div class="amount-container">
+      <select id="amountSelect">
+        <option value="E3" selected>الراتب</option>
+        <option value="H3">المبيعات</option>
+        <option value="I6">التحصيل</option>
+      </select>
+      <div id="amountValues" class="amount-box">جارٍ التحميل...</div>
     </div>
 
-    <script>
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1j_qC35ezm4VRJG-7pcteMP85BwEvvvQv65Qb9f4Mpq7c2w0-fabmAikN79XiDz1x/exec';
-        const daysArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    <div class="form-group">
+      <label for="note">ملاحظة :</label>
+      <input type="text" id="note" placeholder="ملاحظة">
+    </div>
 
-        document.getElementById('todayDay').textContent = daysArabic[new Date().getDay()];
+    <div class="form-group">
+      <label for="clientSelect">اسم العميل:</label>
+      <select id="clientSelect"><option value="">جارٍ تحميل العملاء...</option></select>
+    </div>
 
-        async function loadClients() {
-            try {
-                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getClients`);
-                const data = await response.json();
-                
-                const select = document.getElementById('clientSelect');
-                select.innerHTML = '<option value="">اختر عميل اليوم...</option>';
-                
-                data.forEach(client => {
-                    const option = document.createElement('option');
-                    option.value = client.name;
-                    option.textContent = client.name;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error loading clients:', error);
-                showMessage('فشل في تحميل العملاء', 'error');
-            }
-        }
+    <div class="form-group">
+      <label for="usd">قبض دولار ($):</label>
+      <input type="number" id="usd" placeholder="المبلغ بالدولار">
+    </div>
 
-        async function validateAndSubmit() {
-            const client = document.getElementById('clientSelect').value;
-            const note = document.getElementById('note').value;
-            const usd = document.getElementById('usd').value;
-            const iqd = document.getElementById('iqd').value;
-            const exchangeRate = document.getElementById('exchangeRate').value;
+    <div class="form-group">
+      <label for="iqd">قبض دينار (IQD):</label>
+      <input type="number" id="iqd" placeholder="المبلغ بالدينار">
+    </div>
 
-            // التحقق من أن أحد الحقلين (note أو client) يحتوي على قيمة
-            if (!note.trim() && !client.trim()) {
-                showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
-                return;
-            }
+    <div class="form-group">
+      <label for="exchangeRate">سعر الصرف:</label>
+      <input type="number" id="exchangeRate" placeholder="سعر الدولار مقابل الدينار">
+    </div>
 
-            const formData = {
-                client: client || 'غير محدد',
-                note: note || 'غير محدد',
-                usd: usd || 'غير محدد',
-                iqd: iqd || 'غير محدد',
-                exchangeRate: exchangeRate || 'غير محدد',
-            };
+    <button onclick="validateAndSubmit()">تسجيل السند</button>
+    <div id="message"></div>
 
-            try {
-                showMessage('جارٍ إرسال البيانات...', 'loading');
+    <div id="todayReceipts">
+      <h3>سندات اليوم:</h3>
+      <ul id="receiptList"></ul>
+      <p><strong>المجموع بالدولار: $<span id="totalUSD">0</span></strong></p>
+    </div>
+  </div>
 
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                    mode: 'no-cors',
-                });
+  <script>
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1j_qC35ezm4VRJG-7pcteMP85BwEvvvQv65Qb9f4Mpq7c2w0-fabmAikN79XiDz1x/exec';
+    const EXTERNAL_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwe3LNxv03ZGn9Cj3mr7iq4facjiR2AD4iy_vNNQWgZQ1sgSMSBkPGYJOtw-M0zPgw_ug/exec';
 
-                showMessage('تم الإرسال', 'success');
-                resetForm();
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+    const daysArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    document.getElementById('todayDay').textContent = daysArabic[new Date().getDay()];
 
-        function resetForm() {
-            document.getElementById('clientSelect').value = '';
-            document.getElementById('usd').value = '';
-            document.getElementById('iqd').value = '';
-            document.getElementById('exchangeRate').value = '';
-            document.getElementById('note').value = '';
-        }
+    document.getElementById('amountSelect').addEventListener('change', loadAmounts);
 
-        function showMessage(text, type) {
-            const msgDiv = document.getElementById('message');
-            msgDiv.textContent = text;
-            msgDiv.className = type;
-            setTimeout(() => msgDiv.textContent = '', 5000);
-        }
+    async function loadClients() {
+      try {
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getClients`);
+        const data = await response.json();
+        const select = document.getElementById('clientSelect');
+        select.innerHTML = '<option value="">اختر عميل اليوم...</option>';
+        data.forEach(client => {
+          const option = document.createElement('option');
+          option.value = client.name;
+          option.textContent = client.name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        showMessage('فشل في تحميل العملاء', 'error');
+      }
+    }
 
-        window.onload = loadClients;
-    </script>
+    async function loadAmounts() {
+      const range = document.getElementById('amountSelect').value;
+      const container = document.getElementById('amountValues');
+      container.textContent = 'جارٍ التحميل...';
+      try {
+        const response = await fetch(`${EXTERNAL_SHEET_URL}?range=${range}`);
+        const data = await response.json();
+        const formatted = Number(data.value).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        container.textContent = formatted;
+      } catch (error) {
+        container.textContent = 'خطأ في التحميل';
+      }
+    }
+
+    async function validateAndSubmit() {
+      const client = document.getElementById('clientSelect').value;
+      const note = document.getElementById('note').value;
+      const usd = document.getElementById('usd').value;
+      const iqd = document.getElementById('iqd').value;
+      const exchangeRate = document.getElementById('exchangeRate').value;
+
+      if (!note.trim() && !client.trim()) {
+        showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
+        return;
+      }
+
+      const formData = {
+        client: client || 'غير محدد',
+        note: note || 'غير محدد',
+        usd: usd || '0',
+        iqd: iqd || '0',
+        exchangeRate: exchangeRate || '0',
+      };
+
+      try {
+        showMessage('جارٍ إرسال البيانات...', 'loading');
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          mode: 'no-cors',
+        });
+        showMessage('تم الإرسال بنجاح', 'success');
+        resetForm();
+        loadTodayReceipts();
+      } catch (error) {
+        showMessage('فشل في الإرسال', 'error');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('clientSelect').value = '';
+      document.getElementById('usd').value = '';
+      document.getElementById('iqd').value = '';
+      document.getElementById('exchangeRate').value = '';
+      document.getElementById('note').value = '';
+    }
+
+    function showMessage(text, type) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.className = type;
+      setTimeout(() => msg.textContent = '', 5000);
+    }
+
+    window.onload = () => {
+      loadClients();
+      loadTodayReceipts();
+      loadAmounts();
+    };
+  </script>
 </body>
 </html>
