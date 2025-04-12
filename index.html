@@ -159,12 +159,6 @@
     <button onclick="validateAndSubmit()">تسجيل السند</button>
     <div id="message"></div>
 
-    <div id="todayReceipts">
-      <h3>سندات اليوم:</h3>
-      <ul id="receiptList"></ul>
-      <p><strong>المجموع بالدولار: $<span id="totalUSD">0</span></strong></p>
-    </div>
-  </div>
 
   <script>
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1j_qC35ezm4VRJG-7pcteMP85BwEvvvQv65Qb9f4Mpq7c2w0-fabmAikN79XiDz1x/exec';
@@ -189,6 +183,25 @@
         });
       } catch (error) {
         showMessage('فشل في تحميل العملاء', 'error');
+      }
+    }
+
+    async function loadTodayReceipts() {
+      try {
+        const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getTodayReceipts`);
+        const data = await response.json();
+        const list = document.getElementById('receiptList');
+        list.innerHTML = '';
+        let total = 0;
+        data.forEach(entry => {
+          const li = document.createElement('li');
+          li.textContent = `${entry.client} - $${entry.usd}`;
+          total += parseFloat(entry.usd || 0);
+          list.appendChild(li);
+        });
+        document.getElementById('totalUSD').textContent = total.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      } catch (error) {
+        showMessage('    ', 'error');
       }
     }
 
