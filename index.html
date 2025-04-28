@@ -182,40 +182,47 @@
     }
 
     async function validateAndSubmit() {
-      const client = document.getElementById('clientSelect').value;
-      const note = document.getElementById('note').value;
-      const usd = document.getElementById('usd').value;
-      const iqd = document.getElementById('iqd').value;
-      const exchangeRate = document.getElementById('exchangeRate').value;
+  const button = document.querySelector('button'); // زر الإرسال
+  button.disabled = true; // تعطيل الزر مباشرة عند الضغط
 
-      if (!note.trim() && !client.trim()) {
-        showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
-        return;
-      }
+  const client = document.getElementById('clientSelect').value;
+  const note = document.getElementById('note').value;
+  const usd = document.getElementById('usd').value;
+  const iqd = document.getElementById('iqd').value;
+  const exchangeRate = document.getElementById('exchangeRate').value;
 
-      const formData = {
-        client: client || 'غير محدد',
-        note: note || 'غير محدد',
-        usd: usd || '0',
-        iqd: iqd || '0',
-        exchangeRate: exchangeRate || '0',
-      };
+  if (!note.trim() && !client.trim()) {
+    showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
+    button.disabled = false; // إعادة تفعيل الزر إذا فشل التحقق
+    return;
+  }
 
-      try {
-        showMessage('جارٍ إرسال البيانات...', 'loading');
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData),
-          mode: 'no-cors',
-        });
-        showMessage('تم ارسال السند بنجاح', 'success');
-        resetForm();
-        loadTodayReceipts();
-      } catch (error) {
-        showMessage('فشل في الإرسال', 'error');
-      }
-    }
+  const formData = {
+    client: client || 'غير محدد',
+    note: note || 'غير محدد',
+    usd: usd || '0',
+    iqd: iqd || '0',
+    exchangeRate: exchangeRate || '0',
+  };
+
+  try {
+    showMessage('جارٍ إرسال البيانات...', 'loading');
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+      mode: 'no-cors',
+    });
+    showMessage('تم ارسال السند بنجاح', 'success');
+    resetForm();
+    loadTodayReceipts();
+  } catch (error) {
+    showMessage('فشل في الإرسال', 'error');
+  } finally {
+    button.disabled = false; // إعادة تفعيل الزر بعد الانتهاء سواء بنجاح أو خطأ
+  }
+}
+
 
     function resetForm() {
       document.getElementById('clientSelect').value = '';
