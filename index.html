@@ -185,7 +185,8 @@
   const button = document.querySelector('button'); // زر الإرسال
   button.disabled = true; // تعطيل الزر مباشرة عند الضغط
 
-  const client = document.getElementById('clientSelect').value;
+  let rawClient = document.getElementById('clientSelect').value;
+  let client = rawClient.split(' - ')[0]; // استخراج الاسم فقط بدون الرقم
   const note = document.getElementById('note').value;
   const usd = document.getElementById('usd').value;
   const iqd = document.getElementById('iqd').value;
@@ -193,7 +194,7 @@
 
   if (!note.trim() && !client.trim()) {
     showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
-    button.disabled = false; // إعادة تفعيل الزر إذا فشل التحقق
+    button.disabled = false;
     return;
   }
 
@@ -219,7 +220,7 @@
   } catch (error) {
     showMessage('فشل في الإرسال', 'error');
   } finally {
-    button.disabled = false; // إعادة تفعيل الزر بعد الانتهاء سواء بنجاح أو خطأ
+    button.disabled = false;
   }
 }
 
