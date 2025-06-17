@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>نظام سندات القبض</title>
   <style>
-    /* --- التنسيقات كما أرسلتها --- */
     body {
       font-family: 'Arial', sans-serif;
       background: #f0f4f8;
@@ -99,12 +98,12 @@
 
     <div class="form-group">
       <label for="usd">قبض دولار ($):</label>
-      <input type="number" id="usd" placeholder="المبلغ بالدولار">
+      <input type="tel" id="usd" placeholder="المبلغ بالدولار" step="0.01" min="0" pattern="[0-9]*" inputmode="decimal" />
     </div>
 
     <div class="form-group">
       <label for="iqd">قبض دينار (IQD):</label>
-      <input type="number" id="iqd" placeholder="المبلغ بالدينار">
+      <input type="tel" id="iqd" placeholder="المبلغ بالدينار" step="1" min="0" pattern="[0-9]*" inputmode="numeric" />
     </div>
 
     <div class="form-group">
@@ -125,6 +124,7 @@
   <script>
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzU7XtTieDcGSyK7GbwP27ijbIu_unClrR6p8xGIjj38G_kOCnsvXzM5AK404q-3KWu/exec';
     const EXTERNAL_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwe3LNxv03ZGn9Cj3mr7iq4facjiR2AD4iy_vNNQWgZQ1sgSMSBkPGYJOtw-M0zPgw_ug/exec';
+    const RATE_URL = 'https://script.google.com/macros/s/AKfycbzAvk87pUPqPzrnlcyXk7VfaT5Kk4pzeW2M-SD-2XxVhudmNG8vRJ-IgK7hJt89LBif/exec';
 
     const daysArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     document.getElementById('todayDay').textContent = daysArabic[new Date().getDay()];
@@ -181,49 +181,58 @@
       }
     }
 
+    async function loadExchangeRate() {
+      try {
+        const response = await fetch(RATE_URL);
+        const data = await response.json();
+        document.getElementById('exchangeRate').value = data.rate;
+      } catch (error) {
+        showMessage('فشل في تحميل سعر الصرف', 'error');
+      }
+    }
+
     async function validateAndSubmit() {
-  const button = document.querySelector('button'); // زر الإرسال
-  button.disabled = true; // تعطيل الزر مباشرة عند الضغط
+      const button = document.querySelector('button');
+      button.disabled = true;
 
-  let rawClient = document.getElementById('clientSelect').value;
-  let client = rawClient.split(' - ')[0]; // استخراج الاسم فقط بدون الرقم
-  const note = document.getElementById('note').value;
-  const usd = document.getElementById('usd').value;
-  const iqd = document.getElementById('iqd').value;
-  const exchangeRate = document.getElementById('exchangeRate').value;
+      let rawClient = document.getElementById('clientSelect').value;
+      let client = rawClient.split(' - ')[0];
+      const note = document.getElementById('note').value;
+      const usd = document.getElementById('usd').value;
+      const iqd = document.getElementById('iqd').value;
+      const exchangeRate = document.getElementById('exchangeRate').value;
 
-  if (!note.trim() && !client.trim()) {
-    showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
-    button.disabled = false;
-    return;
-  }
+      if (!note.trim() && !client.trim()) {
+        showMessage('الرجاء إدخال ملاحظة أو اسم العميل على الأقل', 'error');
+        button.disabled = false;
+        return;
+      }
 
-  const formData = {
-    client: client || 'غير محدد',
-    note: note || 'غير محدد',
-    usd: usd || '0',
-    iqd: iqd || '0',
-    exchangeRate: exchangeRate || '0',
-  };
+      const formData = {
+        client: client || 'غير محدد',
+        note: note || 'غير محدد',
+        usd: usd || '0',
+        iqd: iqd || '0',
+        exchangeRate: exchangeRate || '0',
+      };
 
-  try {
-    showMessage('جارٍ إرسال البيانات...', 'loading');
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-      mode: 'no-cors',
-    });
-    showMessage('تم ارسال السند بنجاح', 'success');
-    resetForm();
-    loadTodayReceipts();
-  } catch (error) {
-    showMessage('فشل في الإرسال', 'error');
-  } finally {
-    button.disabled = false;
-  }
-}
-
+      try {
+        showMessage('جارٍ إرسال البيانات...', 'loading');
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          mode: 'no-cors',
+        });
+        showMessage('تم ارسال السند بنجاح', 'success');
+        resetForm();
+        loadTodayReceipts();
+      } catch (error) {
+        showMessage('فشل في الإرسال', 'error');
+      } finally {
+        button.disabled = false;
+      }
+    }
 
     function resetForm() {
       document.getElementById('clientSelect').value = '';
@@ -240,10 +249,28 @@
       setTimeout(() => msg.textContent = '', 5000);
     }
 
+    // تحديث تلقائي للدينار أو الدولار
+    document.getElementById('usd').addEventListener('input', function () {
+      const usd = parseFloat(this.value);
+      const rate = parseFloat(document.getElementById('exchangeRate').value);
+      if (!isNaN(usd) && !isNaN(rate) && rate > 0) {
+        document.getElementById('iqd').value = Math.round(usd * rate);
+      }
+    });
+
+    document.getElementById('iqd').addEventListener('input', function () {
+      const iqd = parseFloat(this.value);
+      const rate = parseFloat(document.getElementById('exchangeRate').value);
+      if (!isNaN(iqd) && !isNaN(rate) && rate > 0) {
+        document.getElementById('usd').value = (iqd / rate).toFixed(2);
+      }
+    });
+
     window.onload = () => {
       loadClients();
       loadTodayReceipts();
       loadAmounts();
+      loadExchangeRate();
     };
   </script>
 </body>
