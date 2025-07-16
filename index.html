@@ -125,7 +125,7 @@
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzU7XtTieDcGSyK7GbwP27ijbIu_unClrR6p8xGIjj38G_kOCnsvXzM5AK404q-3KWu/exec';
     const EXTERNAL_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwe3LNxv03ZGn9Cj3mr7iq4facjiR2AD4iy_vNNQWgZQ1sgSMSBkPGYJOtw-M0zPgw_ug/exec';
     const RATE_URL = 'https://script.google.com/macros/s/AKfycbzAvk87pUPqPzrnlcyXk7VfaT5Kk4pzeW2M-SD-2XxVhudmNG8vRJ-IgK7hJt89LBif/exec';
-
+    const LOCATION_LOG_URL = 'https://script.google.com/macros/s/AKfycbwzeYeiStAMd5Xawtn6cqlO7e81R0cyz6L1-3rH5JlObEf569Ja_CJXeE13cCK-GEqa/exec';
     const daysArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     document.getElementById('todayDay').textContent = daysArabic[new Date().getDay()];
 
@@ -232,6 +232,36 @@
       } finally {
         button.disabled = false;
       }
+              showMessage('تم ارسال السند بنجاح', 'success');
+        resetForm();
+        loadTodayReceipts();
+
+        // 🧭 إرسال الموقع الجغرافي واسم العميل إلى شيت آخر
+        if (client) {
+          try {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+              const locationData = {
+                client: client,
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                timestamp: new Date().toISOString()
+              };
+
+              await fetch(LOCATION_LOG_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(locationData),
+                mode: 'no-cors',
+              });
+
+              console.log("✅ تم إرسال الموقع الجغرافي بنجاح");
+            }, (error) => {
+              console.warn("⚠️ تعذر الحصول على الموقع:", error.message);
+            });
+          } catch (locErr) {
+            console.error("📍 خطأ في إرسال الموقع:", locErr);
+          }
+        }
     }
 
     function resetForm() {
