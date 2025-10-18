@@ -31,6 +31,12 @@
       font-size: 20px;
       box-sizing: border-box;
     }
+    input[readonly] {
+      background-color: #f8f9fa;
+      cursor: not-allowed;
+      color: #6c757d;
+      border-color: #ccc;
+    }
     button {
       background: #27ae60;
       color: #fff;
@@ -71,10 +77,154 @@
       text-align: center;
     }
     #amountSelect { width: 150px; padding: 8px; font-size: 14px; }
+
+    /* أنماط نافذة التنبيه */
+    .exchange-rate-alert {
+      background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+      border: 2px solid #ffc107;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px 0;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+      display: none;
+      animation: slideDown 0.5s ease-out;
+    }
+
+    .exchange-rate-alert.active {
+      display: block;
+    }
+
+    .alert-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .alert-icon {
+      font-size: 2rem;
+    }
+
+    .alert-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #856404;
+      margin: 0;
+    }
+
+    .alert-message {
+      color: #856404;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+
+    .exchange-rate-info {
+      background: rgba(255, 255, 255, 0.7);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+      border: 1px solid #ffeaa7;
+    }
+
+    .rate-change {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 5px 0;
+    }
+
+    .rate-change:last-child {
+      margin-bottom: 0;
+    }
+
+    .rate-label {
+      font-weight: 600;
+      color: #856404;
+    }
+
+    .rate-value {
+      font-weight: bold;
+    }
+
+    .new-rate {
+      color: #e74c3c;
+      font-size: 1.1em;
+    }
+
+    .old-rate {
+      color: #6c757d;
+      text-decoration: line-through;
+    }
+
+    .alert-button {
+      background: #ffc107;
+      color: #856404;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .alert-button:hover {
+      background: #e0a800;
+      transform: translateY(-2px);
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .rate-change {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+      }
+      
+      .alert-header {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <!-- نافذة التنبيه -->
+    <div class="exchange-rate-alert" id="exchangeRateAlert">
+      <div class="alert-header">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-title">تحذير: تغيير سعر الصرف</div>
+      </div>
+      <div class="alert-message">سعر الصرف حسب بورصة اربيل الان</div>
+      
+      <div class="exchange-rate-info">
+        <div class="rate-change">
+          <span class="rate-label">السعر السابق:</span>
+          <span class="rate-value old-rate" id="oldRateValue">0</span>
+        </div>
+        <div class="rate-change">
+          <span class="rate-label">السعر الجديد:</span>
+          <span class="rate-value new-rate" id="newRateValue">0</span>
+        </div>
+      </div>
+      
+      <button class="alert-button" id="alertOkButton">موافق</button>
+    </div>
+
     <h2>سند قبض - وعد: <span id="todayDay"></span></h2>
 
     <div class="amount-container">
@@ -108,7 +258,7 @@
 
     <div class="form-group">
       <label for="exchangeRate">سعر الصرف:</label>
-      <input type="number" id="exchangeRate" placeholder="سعر الدولار مقابل الدينار">
+      <input type="number" id="exchangeRate" placeholder="سعر الدولار مقابل الدينار" readonly>
     </div>
 
     <button onclick="validateAndSubmit()">تسجيل السند</button>
@@ -127,9 +277,16 @@
     const RATE_URL = 'https://script.google.com/macros/s/AKfycbzAvk87pUPqPzrnlcyXk7VfaT5Kk4pzeW2M-SD-2XxVhudmNG8vRJ-IgK7hJt89LBif/exec';
 
     const daysArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    
+    // متغيرات لتخزين أسعار الصرف
+    let previousExchangeRate = null;
+
     document.getElementById('todayDay').textContent = daysArabic[new Date().getDay()];
 
     document.getElementById('amountSelect').addEventListener('change', loadAmounts);
+
+    // إعداد مستمع حدث لزر التنبيه
+    document.getElementById('alertOkButton').addEventListener('click', hideExchangeRateAlert);
 
     async function loadClients() {
       try {
@@ -183,12 +340,50 @@
 
     async function loadExchangeRate() {
       try {
+        // جلب السعر السابق من localStorage
+        const storedPreviousRate = localStorage.getItem('previousExchangeRate');
+        previousExchangeRate = storedPreviousRate ? parseFloat(storedPreviousRate) : null;
+        
         const response = await fetch(RATE_URL);
         const data = await response.json();
-        document.getElementById('exchangeRate').value = data.rate;
+        const newRate = parseFloat(data.rate);
+        
+        // التحقق من التغير (فقط إذا كان هناك سعر سابق)
+        if (previousExchangeRate !== null && previousExchangeRate !== newRate) {
+          showExchangeRateAlert(previousExchangeRate, newRate);
+        }
+        
+        // حفظ السعر الجديد كسعر سابق للمرة القادمة
+        localStorage.setItem('previousExchangeRate', newRate.toString());
+        previousExchangeRate = newRate;
+        
+        document.getElementById('exchangeRate').value = newRate;
       } catch (error) {
         showMessage('فشل في تحميل سعر الصرف', 'error');
       }
+    }
+
+    // عرض تنبيه تغيير سعر الصرف
+    function showExchangeRateAlert(oldRate, newRate) {
+      document.getElementById('oldRateValue').textContent = formatRate(oldRate);
+      document.getElementById('newRateValue').textContent = formatRate(newRate);
+      
+      const alertElement = document.getElementById('exchangeRateAlert');
+      alertElement.classList.add('active');
+      alertElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // تنسيق عرض سعر الصرف
+    function formatRate(rate) {
+      return rate.toLocaleString('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }) + ' دينار';
+    }
+
+    // إخفاء تنبيه تغيير سعر الصرف
+    function hideExchangeRateAlert() {
+      document.getElementById('exchangeRateAlert').classList.remove('active');
     }
 
     async function validateAndSubmit() {
@@ -238,7 +433,6 @@
       document.getElementById('clientSelect').value = '';
       document.getElementById('usd').value = '';
       document.getElementById('iqd').value = '';
-      document.getElementById('exchangeRate').value = '';
       document.getElementById('note').value = '';
     }
 
