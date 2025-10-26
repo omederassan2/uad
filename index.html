@@ -275,6 +275,7 @@
     const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzU7XtTieDcGSyK7GbwP27ijbIu_unClrR6p8xGIjj38G_kOCnsvXzM5AK404q-3KWu/exec';
     const EXTERNAL_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwe3LNxv03ZGn9Cj3mr7iq4facjiR2AD4iy_vNNQWgZQ1sgSMSBkPGYJOtw-M0zPgw_ug/exec';
     const RATE_URL = 'https://script.google.com/macros/s/AKfycbzAvk87pUPqPzrnlcyXk7VfaT5Kk4pzeW2M-SD-2XxVhudmNG8vRJ-IgK7hJt89LBif/exec';
+    const ZERO_CLIENTS_URL = 'https://script.google.com/macros/s/AKfycbwkdftH_0szC8lXTUZfXgaYIS2r1yg4t133wkh9zv6Iu6Ih-NRQURqcxutrXBPpRA_C/exec';
 
     const daysArabic = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     
@@ -300,9 +301,35 @@
           option.textContent = client.name;
           select.appendChild(option);
         });
+        await markZeroClients();
       } catch (error) {
         showMessage('فشل في تحميل العملاء', 'error');
       }
+      // 🔴 دالة لجلب العملاء ذوي القيمة 0 من شيت منفصل ووضع إشارة حمراء بجانبهم
+async function markZeroClients() {
+  try {
+    const response = await fetch(`${ZERO_CLIENTS_URL}?action=getZeroClients`);
+    const data = await response.json();
+
+    // العملاء الذين لديهم القيمة 0 فقط
+    const zeroClients = data
+      .filter(item => item.value == "0" || item.value == 0)
+      .map(item => item.name.trim());
+
+    const select = document.getElementById('clientSelect');
+
+    for (const option of select.options) {
+      const nameOnly = option.textContent.split('-')[0].trim();
+
+      if (zeroClients.includes(nameOnly)) {
+        option.textContent += ' 🔴';
+        option.style.color = 'red';
+      }
+    }
+  } catch (error) {
+    console.error('❌ خطأ أثناء جلب العملاء ذوي القيمة 0:', error);
+  }
+}
     }
 
     async function loadTodayReceipts() {
